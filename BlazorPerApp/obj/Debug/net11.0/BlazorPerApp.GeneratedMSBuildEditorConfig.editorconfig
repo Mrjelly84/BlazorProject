@@ -37,10 +37,6 @@ build_metadata.AdditionalFiles.CssScope =
 build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50c1xFdmVudENhcmQucmF6b3I=
 build_metadata.AdditionalFiles.CssScope = 
 
-[C:/Users/willi/OneDrive/Documents/BlazorProject/BlazorPerApp/Pages/Counter.razor]
-build_metadata.AdditionalFiles.TargetPath = UGFnZXNcQ291bnRlci5yYXpvcg==
-build_metadata.AdditionalFiles.CssScope = 
-
 [C:/Users/willi/OneDrive/Documents/BlazorProject/BlazorPerApp/Pages/ErrorLogs.razor]
 build_metadata.AdditionalFiles.TargetPath = UGFnZXNcRXJyb3JMb2dzLnJhem9y
 build_metadata.AdditionalFiles.CssScope = 
@@ -51,10 +47,6 @@ build_metadata.AdditionalFiles.CssScope =
 
 [C:/Users/willi/OneDrive/Documents/BlazorProject/BlazorPerApp/Pages/NotFound.razor]
 build_metadata.AdditionalFiles.TargetPath = UGFnZXNcTm90Rm91bmQucmF6b3I=
-build_metadata.AdditionalFiles.CssScope = 
-
-[C:/Users/willi/OneDrive/Documents/BlazorProject/BlazorPerApp/Pages/Weather.razor]
-build_metadata.AdditionalFiles.TargetPath = UGFnZXNcV2VhdGhlci5yYXpvcg==
 build_metadata.AdditionalFiles.CssScope = 
 
 [C:/Users/willi/OneDrive/Documents/BlazorProject/BlazorPerApp/_Imports.razor]

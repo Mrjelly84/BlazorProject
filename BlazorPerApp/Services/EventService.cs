@@ -19,7 +19,7 @@ namespace BlazorPerApp.Services
 
         public IReadOnlyList<EventItem> GetAll() => _events.AsReadOnly();
 
-        public void Add(EventItem item)
+        public void Add(EventItem? item)
         {
             if (item == null)
             {

@@ -19,7 +19,7 @@
     <div class="alert alert-danger">@errorMessage</div>
 }
 
-@if (persistedLogs?.Count == 0)
+@if (persistedLogs == null || persistedLogs.Count == 0)
 {
     <p>No logs available.</p>
 }
