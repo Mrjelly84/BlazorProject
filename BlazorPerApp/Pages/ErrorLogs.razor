@@ -1,0 +1,116 @@
+@page "/error-logs"
+
+<PageTitle>Error Logs</PageTitle>
+
+@inject BlazorPerApp.Services.LogStorage LogStorage
+@inject Microsoft.Extensions.Logging.ILoggerFactory LoggerFactory
+@inject Microsoft.JSInterop.IJSRuntime JS
+
+<h1>Error Logs</h1>
+
+<div class="mb-3">
+    <button class="btn btn-primary btn-sm me-2" @onclick="LoadLogs">Load Logs</button>
+    <button class="btn btn-outline-danger btn-sm me-2" @onclick="ClearLogs">Clear Logs</button>
+    <button class="btn btn-outline-info btn-sm" @onclick="ToggleErrorDump">Toggle Error Dump</button>
+</div>
+
+@if (errorMessage != null)
+{
+    <div class="alert alert-danger">@errorMessage</div>
+}
+
+@if (persistedLogs?.Count == 0)
+{
+    <p>No logs available.</p>
+}
+else
+{
+    <div class="card mb-3">
+        <div class="card-body">
+            <h5 class="card-title">Persisted Logs</h5>
+            <ul>
+                @foreach (var log in persistedLogs)
+                {
+                    <li>
+                        <strong>@log.Timestamp.ToLocalTime():</strong> [@log.Level] @log.Category - @log.Message
+                        @if (!string.IsNullOrEmpty(log.Exception))
+                        {
+                            <div class="text-danger">@log.Exception</div>
+                        }
+                    </li>
+                }
+            </ul>
+        </div>
+    </div>
+}
+
+@if (showErrorDump)
+{
+    <div class="card mt-3">
+        <div class="card-body">
+            <h5>Recent Errors (copyable)</h5>
+            <pre style="max-height:260px;overflow:auto;">@errorDumpJson</pre>
+            <button class="btn btn-sm btn-primary mt-2" @onclick="CopyRecentErrors">Copy to clipboard</button>
+        </div>
+    </div>
+}
+
+@code {
+    private List<BlazorPerApp.Models.LogEntry> persistedLogs = new();
+    private bool showErrorDump = false;
+    private string? errorMessage;
+    private string errorDumpJson = string.Empty;
+    private Microsoft.Extensions.Logging.ILogger? logger;
+
+    protected override async System.Threading.Tasks.Task OnInitializedAsync()
+    {
+        logger = LoggerFactory.CreateLogger("ErrorLogs");
+        await LoadLogs();
+    }
+
+    private async System.Threading.Tasks.Task LoadLogs()
+    {
+        try
+        {
+            persistedLogs = await LogStorage.GetAllAsync();
+            errorDumpJson = System.Text.Json.JsonSerializer.Serialize(persistedLogs, new System.Text.Json.JsonSerializerOptions { WriteIndented = true });
+            errorMessage = null;
+        }
+        catch (System.Exception ex)
+        {
+            errorMessage = ex.Message;
+            logger?.LogError(ex, "Failed to load logs");
+        }
+    }
+
+    private async System.Threading.Tasks.Task ClearLogs()
+    {
+        try
+        {
+            await LogStorage.ClearAsync();
+            persistedLogs = new List<BlazorPerApp.Models.LogEntry>();
+            errorDumpJson = string.Empty;
+            errorMessage = null;
+        }
+        catch (System.Exception ex)
+        {
+            errorMessage = ex.Message;
+            logger?.LogError(ex, "Failed to clear logs");
+        }
+    }
+
+    private void ToggleErrorDump() => showErrorDump = !showErrorDump;
+
+    private async System.Threading.Tasks.Task CopyRecentErrors()
+    {
+        try
+        {
+            await JS.InvokeVoidAsync("navigator.clipboard.writeText", errorDumpJson);
+        }
+        catch (System.Exception ex)
+        {
+            errorMessage = "Failed to copy logs to clipboard.";
+            logger?.LogError(ex, "Failed to copy logs to clipboard");
+        }
+    }
+}

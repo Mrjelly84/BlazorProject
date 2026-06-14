@@ -1,0 +1,134 @@
+﻿@page "/"
+
+<PageTitle>Home</PageTitle>
+
+@inject BlazorPerApp.Services.EventService eventService
+@inject Microsoft.Extensions.Logging.ILoggerFactory LoggerFactory
+
+<h1>Create event</h1>
+
+<EventCard Event="newEvent" EventChanged="@(e => newEvent = e)" OnValidSubmit="SaveEvent" />
+
+<div class="mt-4">
+	<h3>Booked Events</h3>
+	@if (!string.IsNullOrEmpty(errorMessage))
+	{
+		<div class="alert alert-danger">Error saving event: @errorMessage</div>
+	}
+	@if (eventService.GetAll().Count == 0)
+	{
+		<p>No events booked yet.</p>
+	}
+	else
+	{
+		<ul class="list-group">
+			@foreach (var ev in eventService.GetAll())
+			{
+				<li class="list-group-item">
+					<div class="d-flex justify-content-between align-items-start">
+						<div>
+							<strong>@ev.Title</strong> — @ev.Date.ToShortDateString()
+						</div>
+						<div>
+							<span class="badge bg-secondary">@(ev.Attendees?.Count() ?? 0) attending</span>
+						</div>
+					</div>
+					<div class="mt-1">@ev.Description</div>
+
+					<div class="mt-2">
+						<label>Add attendee:</label>
+						<div class="input-group">
+							<input class="form-control" placeholder="Name" value="@GetAttendeeInput(ev.Id)" @oninput="@(e => SetAttendeeInput(ev.Id, e.Value?.ToString() ?? string.Empty))" />
+							<button class="btn btn-outline-primary" @onclick="() => AddAttendee(ev.Id)">Add</button>
+						</div>
+					</div>
+
+					@if (ev.Attendees?.Any() == true)
+					{
+						<ul class="mt-2">
+							@foreach (var a in ev.Attendees)
+							{
+								<li>
+									@a <button class="btn btn-sm btn-link text-danger" @onclick="() => RemoveAttendee(ev.Id, a)">remove</button>
+								</li>
+							}
+						</ul>
+					}
+				</li>
+			}
+		</ul>
+	}
+</div>
+
+@code {
+	private BlazorPerApp.Models.EventItem newEvent = new BlazorPerApp.Models.EventItem();
+
+	private readonly System.Collections.Generic.Dictionary<System.Guid, string> attendeeInputs = new();
+
+	protected override void OnInitialized()
+	{
+		eventService.OnChange += OnEventsChanged;
+		logger = LoggerFactory.CreateLogger("Home");
+		logger.LogInformation("Home component initialized");
+	}
+
+	private void OnEventsChanged()
+	{
+		InvokeAsync(StateHasChanged);
+	}
+
+	public void Dispose()
+	{
+		eventService.OnChange -= OnEventsChanged;
+	}
+
+	private string? errorMessage;
+
+	private Microsoft.Extensions.Logging.ILogger? logger;
+
+	private void SaveEvent()
+	{
+		try
+		{
+			errorMessage = null;
+			logger?.LogInformation("Attempting to save event: {Title}", newEvent?.Title);
+			eventService.Add(newEvent);
+			logger?.LogInformation("Event saved: {Title}", newEvent?.Title);
+			newEvent = new BlazorPerApp.Models.EventItem();
+			StateHasChanged();
+		}
+		catch (System.Exception ex)
+		{
+			logger?.LogError(ex, "Error saving event");
+			errorMessage = ex.Message;
+		}
+	}
+
+	private void AddAttendee(System.Guid eventId)
+	{
+		if (!attendeeInputs.TryGetValue(eventId, out var name) || string.IsNullOrWhiteSpace(name)) return;
+		logger?.LogInformation("Adding attendee {Name} to {EventId}", name, eventId);
+		var added = eventService.AddAttendee(eventId, name);
+		if (added)
+		{
+			attendeeInputs[eventId] = string.Empty;
+		}
+	}
+
+	private void RemoveAttendee(System.Guid eventId, string attendee)
+	{
+		logger?.LogInformation("Removing attendee {Name} from {EventId}", attendee, eventId);
+		eventService.RemoveAttendee(eventId, attendee);
+	}
+
+	private string GetAttendeeInput(System.Guid id)
+	{
+		return attendeeInputs.TryGetValue(id, out var value) ? value : string.Empty;
+	}
+
+	private void SetAttendeeInput(System.Guid id, string value)
+	{
+		attendeeInputs[id] = value;
+	}
+
+}
