@@ -11,6 +11,6 @@ builder.Services.AddScoped<BlazorPerApp.Services.LogStorage>();
 builder.Services.AddScoped<BlazorPerApp.Services.EventService>();
 
 // Configure logging
-builder.Logging.SetMinimumLevel(Microsoft.Extensions.Logging.LogLevel.Information);
+builder.Logging.SetMinimumLevel(LogLevel.Information);
 
 await builder.Build().RunAsync();
